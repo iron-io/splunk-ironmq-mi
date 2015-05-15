@@ -1,4 +1,4 @@
-import sys
+import sys, urllib2
 
 try:
     import json
@@ -71,6 +71,34 @@ class MyScript(Script):
         return scheme
 
     def validate_input(self, validation_definition):
+        host = validation_definition.parameters["ironmq_host"]
+        if host:
+            try:
+                response = urllib2.urlopen("http://" + host).read()
+                jsondata = json.loads(response)
+            except:
+                raise Exception("The host does not exist: %s !" % host)
+
+        # Project ID, Token validation
+        project_id = validation_definition.parameters["project_id"]
+        token = validation_definition.parameters["token"]
+        try:
+            if host:
+                ironmq = IronMQ(
+                    project_id=project_id,
+                    token=token,
+                    host=host
+                )
+            else:
+                ironmq = IronMQ(
+                    project_id=project_id,
+                    token=token
+                )
+
+            queues = ironmq.queues()
+        except:
+            raise Exception("IronMQ project doesn't exist with the specified credentials: project_id:%s, token:%s" % (project_id, token))
+
         max_size = validation_definition.parameters["max_number_of_messages"]
         if max_size:
             try:
@@ -84,7 +112,6 @@ class MyScript(Script):
         if is_deletable:
             val = self.__str_to_bool(is_deletable)
 
-
     def stream_events(self, inputs, ew):
         for input_name, input_item in inputs.inputs.iteritems():
             # Get fields from the InputDefinition object
@@ -95,26 +122,37 @@ class MyScript(Script):
             ironmq_host = input_item["ironmq_host"] if "ironmq_host" in input_item else "mq-aws-us-east-1.iron.io"
             is_deletable = self.__str_to_bool(input_item["is_deletable"]) if "is_deletable" in input_item else True
 
-            ironmq = IronMQ(
-                project_id=project_id,
-                token=token,
-                host=ironmq_host
+            info = "Token: %s, ProjectID: %s, Queue: %s, Max size of message: %s, Host: %s, Deletable: %s" % (
+                token, project_id, queue_name, max_num_of_msg, ironmq_host, is_deletable
             )
+            ew.log("INFO", info)
 
-            queue = ironmq.queue(queue_name)
+            try:
+                ironmq = IronMQ(
+                    project_id=project_id,
+                    token=token,
+                    host=ironmq_host
+                )
 
-            msgs = queue.get(max=max_num_of_msg)
-            for msg in msgs["messages"]:
-                # Create an Event object, and set its fields
-                event = Event()
-                event.stanza = input_name
-                event.data = json.dumps(msg)
+                queue = ironmq.queue(queue_name)
+                ew.log("INFO", "Get queue: %s from %s" % (queue_name, queue.client.base_url))
 
-                if is_deletable:
-                    queue.delete(msg["id"])
+                msgs = queue.get(max=max_num_of_msg)
+                for msg in msgs["messages"]:
+                    # Create an Event object, and set its fields
+                    event = Event()
+                    event.stanza = input_name
+                    event.data = json.dumps(msg)
 
-                # Tell the EventWriter to write this event
-                ew.write_event(event)
+                    if is_deletable:
+                        queue.delete(msg["id"])
+                        ew.log("INFO", "Queue message is deleted: %s" % msg["id"])
+
+                    # Tell the EventWriter to write this event
+                    ew.write_event(event)
+                    ew.log("INFO", "Queue message is indexed: %s" % json.dumps(msg))
+            except Exception, e:
+                ew.log("ERROR", e)
 
 
 if __name__ == "__main__":
