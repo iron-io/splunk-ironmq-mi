@@ -11,7 +11,10 @@ This is a Splunk modular input add-on for IronMQ.
 * Supported on Windows, Linux, MacOS, Solaris, FreeBSD, HP-UX, AIX
 
 ## Setup
+### If you have downloaded .spl file:
+* Splunk App->Manage Apps->Install app from file->Choose .spl file->Click upload->That's it.
 
+### Otherwise:
 * Untar the release to your $SPLUNK_HOME/etc/apps directory
 * Restart Splunk
 

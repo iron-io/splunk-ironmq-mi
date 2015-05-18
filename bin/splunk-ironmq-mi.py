@@ -1,9 +1,18 @@
-import sys, urllib2
+import sys, urllib2, os
 
 try:
     import json
 except:
     import simplejson as json
+
+
+SPLUNK_HOME = os.environ.get("SPLUNK_HOME")
+
+EGG_DIR = SPLUNK_HOME + "/etc/apps/ironmq_ta/bin/"
+
+for filename in os.listdir(EGG_DIR):
+    if filename.endswith(".egg"):
+        sys.path.append(EGG_DIR + filename)
 
 from splunklib.modularinput import *
 from iron_mq import *
