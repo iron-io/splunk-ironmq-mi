@@ -15,19 +15,19 @@ This is a Splunk modular input add-on for IronMQ.
 * Splunk App->Manage Apps->Install app from file->Choose .spl file->Click upload->That's it.
 
 ### Otherwise:
-* Untar the release to your $SPLUNK_HOME/etc/apps directory
+* Untar the release to your `$SPLUNK_HOME/etc/apps` directory
 * Restart Splunk
 
 
 ## Logging
 
-Any log entries/errors will get written to $SPLUNK_HOME/var/log/splunk/splunkd.log
+Any log entries/errors will get written to `$SPLUNK_HOME/var/log/splunk/splunkd.log`
 
 
 ## Troubleshooting
 
 * You are using Splunk 6+
-* Look for any errors in $SPLUNK_HOME/var/log/splunk/splunkd.log
+* Look for any errors in `$SPLUNK_HOME/var/log/splunk/splunkd.log`
 
 ## Contact
 
